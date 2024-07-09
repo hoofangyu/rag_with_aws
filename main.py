@@ -18,7 +18,7 @@ def get_query(query_text):
                     model_kwargs = {"temperature":0.4, "top_p":0.8})
 
     db = Chroma(persist_directory=CHROMA_PATH, embedding_function=get_embedding_function())
-    results = db.similarity_search_with_relevance_scores(query_text, k=5)
+    results = db.similarity_search_with_relevance_scores(query_text, k=10)
     sources = [doc.metadata for doc, _score in results]
 
     context_text = "\n\n---\n\n".join([doc.page_content for doc, _score in results])
@@ -28,13 +28,20 @@ def get_query(query_text):
 
     response = model.invoke(prompt)
     response_text = response.content
-    formatted_response = f"Response:\n{response_text}\n\nSources: {sources}"
-    print(formatted_response)
-    return formatted_response
+    #formatted_response = f"Response:\n{response_text}\n\nSources: {sources}"
+    print(response_text)
+    return response_text
 
 # Telegram bot functions
 async def start(update: Update, context: CallbackContext) -> None:
-    await update.message.reply_text('Hi! Send me a query and I will process it for you.')
+    await update.message.reply_text(
+"""
+Hi! This is Fang Yu, I made this particular chatbot to aid you in your understanding for the High Performance Programme System in Triathlon Singapore!
+
+Simply ask any questions you have with the HPP Pathway and I will do my best to provide you with the relevant information!
+
+(Do take my responses with a pinch of salt as I may be hallucinating XD)
+""")
 
 async def handle_message(update: Update, context: CallbackContext) -> None:
     if update.message.chat.type in ['group', 'supergroup']:
@@ -58,6 +65,7 @@ def main():
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
     # Start the Bot
+    print("Starting Telegram Bot")
     application.run_polling()
 
 if __name__ == "__main__":
